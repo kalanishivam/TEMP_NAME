@@ -9,8 +9,8 @@ connecttoDb();
 app.use(express.json());
 
 
-app.use('/api.users' , userRoutes)
-const PORT = 500;
+app.use('/api/users' , userRoutes)
+const PORT = 5000;
 
 app.listen(PORT, (req, res)=>{
     console.log(`server started on PORT  : ${PORT}`)

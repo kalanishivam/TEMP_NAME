@@ -1,26 +1,30 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const express = require('express');
+const User = require('../models/User.js')
 
 
 const jwt_secret = 'SAMPLESECRET';   // to be changed later
 
 exports.handleSignup  = async (req, res)=>{
     try{
-        const {name, email , password, phone} = req.body;
+        const {name, email , password, phone, userName} = req.body;
 
-        const existingUser = await user.findOne({ $or: [{ email }, { phone }] });  // yet to be created
+        // const existingUser = await User.findOne({ $or: [{ email }, { phone }] });  // yet to be created
+        const existingUser = await User.findOne({email})
+
 
         if(existingUser){
             return res.status(400).json({error : "Email already existis"});
         }else{
-            const salt = bcrypt.genSalt(10);
-            const hashedPassword = bcrypt.hash(password , salt);
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password , salt);
             const newUser = await User.create({
                 name,
                 email, 
                 phone,
-                password : hashedPassword
+                password : hashedPassword,
+                username : userName
             })
 
             const payload = {
@@ -48,11 +52,11 @@ exports.handleLogin = async (req, res)=>{
             return res.status(400).json({error : "PLEASE PROVIDE ALL DETAILS"});
         }
 
-        const isExists = await User.findOne({$or : [{email} ,{phone}, {username} ]});
+        const isExists = await User.findOne({$or : [{email} ,{phone}, {userName} ]});
         if(!isExists){
             return res.staus(400).json({error : "INVALID USER  CREDENTIALS"});
         }else{
-            const passwordCompare = await bcrypt.compare(password , userFind.password);  // comparing passwords
+            const passwordCompare = await bcrypt.compare(password , isExists.password);  // comparing passwords
             if(!passwordCompare){
                 return res.status(400).json({error : "INVALID USER CREDENTIALS"});
             }else{
@@ -60,8 +64,8 @@ exports.handleLogin = async (req, res)=>{
                 const payload = {
                     userPayload : {
                         email : email,           // payload to be updated later
-                        username : userName,
-                        phone : phone
+                        username : isExists.username,
+                        phone : isExists.phone
                     }
                 }
                 const authToken = jwt.sign(payload, jwt_secret, { expiresIn: '24h' });
