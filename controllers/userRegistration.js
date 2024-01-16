@@ -29,12 +29,14 @@ exports.handleSignup  = async (req, res)=>{
 
             const payload = {
                 userPayload : {
+                    email : email,
+                    username : userName,
+                    phone : phone,
                     name : name,         // payload to be updated later
-                    email : email
                 }
             }
             const authToken  = jwt.sign(payload, jwt_secret);
-            return res.status(201).json({success : true , authToken : authToken , userEmail : newUser.email})
+            return res.status(201).json({ result: {authToken : authToken , user : payload}})
         }
 
     }catch(error){
@@ -56,6 +58,9 @@ exports.handleLogin = async (req, res)=>{
         if(!isExists){
             return res.staus(400).json({error : "INVALID USER  CREDENTIALS"});
         }else{
+            if(isExists.block == true){
+                return res.status(400).json({error : "YOU ARE BLOCKED. CONTACT ADMIN FOR SUPPORT"})
+            }
             const passwordCompare = await bcrypt.compare(password , isExists.password);  // comparing passwords
             if(!passwordCompare){
                 return res.status(400).json({error : "INVALID USER CREDENTIALS"});
@@ -65,11 +70,12 @@ exports.handleLogin = async (req, res)=>{
                     userPayload : {
                         email : email,           // payload to be updated later
                         username : isExists.username,
-                        phone : isExists.phone
+                        phone : isExists.phone,
+                        name : isExists.name
                     }
                 }
                 const authToken = jwt.sign(payload, jwt_secret, { expiresIn: '24h' });
-                return res.status(200).json({ result: { authToken: authToken, user : payload } });
+                return res.status(201).json({ result: { authToken: authToken, user : payload } });
             }
 
         }

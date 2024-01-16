@@ -21,6 +21,10 @@ const Users = new mongoose.Schema({
     password : {
         type : String,
         required : true
+    },
+    block : {
+        type : Boolean,
+        default : false
     }
 })
 
